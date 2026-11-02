@@ -1,0 +1,91 @@
+# -----------------------------------------------------------------------------
+# Base configuration for the news topic classifier.
+# Every experiment in configs/experiments/ inherits from this file and only
+# overrides what it changes. Keeping one source of truth for defaults is what
+# makes runs comparable and reproducible.
+# -----------------------------------------------------------------------------
+project: news-topic-classifier
+seed: 42
+
+paths:
+  raw_dir: data/raw
+  processed_dir: data/processed        # versioned splits, one folder per data hash
+  artifacts_dir: artifacts             # one folder per experiment (E2, E3, ...)
+  reports_dir: reports
+  legacy_model_dir: models/legacy/e1_baseline
+  serving_root: serving/models         # TF Serving model base path (<root>/<model_name>/<version>)
+  serving_registry: serving/registry.json
+
+data:
+  raw_files: [train_data.csv, test_data.csv]
+  production_db: news_articles.db
+  # Optional file with trusted titles keyed by `link` (e.g. the original
+  # `.backup.csv`, or the Kaggle "Topic Labeled News" CSV). When absent, titles
+  # for corrupted rows are reconstructed from the article URL slug.
+  reference_titles_file: null
+  repair_collapsed_titles: true
+  collapse_unique_ratio: 0.05          # class flagged if unique_titles / rows < this
+  deduplicate: true                    # drop duplicate titles (prevents train/test leakage)
+  min_title_tokens: 2
+  split:
+    train: 0.6
+    dev: 0.2
+    test: 0.2
+    stratify: true
+  label_map: null                      # e.g. {NATION: WORLD_NATION, WORLD: WORLD_NATION}
+
+features:
+  max_tokens: 10000
+  sequence_length: 20
+  remove_stopwords: false
+
+model:
+  architecture: legacy_dense           # legacy_dense | pooled | bilstm | cnn
+  embedding_dim: 24
+  dense_dim: 24
+  dropout: 0.0
+  spatial_dropout: 0.0
+  rnn_units: 64
+  conv_filters: 128
+  kernel_size: 3
+
+training:
+  epochs: 5
+  batch_size: 32
+  learning_rate: 0.001
+  early_stopping_patience: null        # null = train for all epochs (legacy behaviour)
+  class_weight: null                   # null | balanced
+  shuffle_buffer: 10000
+
+augmentation:
+  enabled: false
+  target_classes: [SCIENCE]
+  n_aug_per_sample: 4
+  alpha: 0.1                           # fraction of words touched per operation (EDA)
+
+evaluation:
+  top_k: 2
+  routing_target_accuracy: 0.95        # accuracy the auto-routed bucket must reach on dev
+
+tracking:
+  csv: reports/experiment_tracker.csv
+  mlflow:
+    enabled: true
+    tracking_uri: sqlite:///mlflow.db
+    artifact_location: mlruns
+    experiment_name: news-topic-classifier
+
+deployment:
+  model_name: newsapp_model
+  default_confidence_threshold: 0.6
+  default_margin_threshold: 0.0
+  local_server_port: 8501
+  canary_min_macro_f1_gain: 0.0        # canary must be at least this much better than stable
+  canary_max_class_f1_drop: 0.05       # and must not regress any topic by more than this
+
+monitoring:
+  oov_rate_alert: 0.5                  # per-title share of unknown tokens that flags a title
+  batch_oov_alert: 0.25                # mean OOV rate across a batch that raises an alarm
+  min_english_stopword_ratio: 0.05     # share of English function words below which a title looks foreign
+  min_tokens_for_language_check: 5     # short titles (names, places) are too noisy to judge
+  rolling_window: 10

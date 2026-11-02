@@ -1,0 +1,18 @@
+# E6: sequence-aware architecture (bidirectional LSTM) on clean data.
+name: E6
+description: Bidirectional LSTM, 20k vocab, balanced class weights, early stopping
+features:
+  max_tokens: 20000
+  sequence_length: 24
+model:
+  architecture: bilstm
+  embedding_dim: 64
+  rnn_units: 64
+  dense_dim: 64
+  dropout: 0.4
+  spatial_dropout: 0.2
+training:
+  epochs: 15
+  batch_size: 64
+  early_stopping_patience: 2
+  class_weight: balanced

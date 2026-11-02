@@ -1,0 +1,39 @@
+{
+  "rows": 108774,
+  "nulls": {},
+  "empty_titles": 0,
+  "class_distribution": {
+    "BUSINESS": 0.1379,
+    "ENTERTAINMENT": 0.1379,
+    "HEALTH": 0.1379,
+    "NATION": 0.1379,
+    "SCIENCE": 0.0347,
+    "SPORTS": 0.1379,
+    "TECHNOLOGY": 0.1379,
+    "WORLD": 0.1379
+  },
+  "class_counts": {
+    "BUSINESS": 15000,
+    "ENTERTAINMENT": 15000,
+    "HEALTH": 15000,
+    "NATION": 15000,
+    "SCIENCE": 3774,
+    "SPORTS": 15000,
+    "TECHNOLOGY": 15000,
+    "WORLD": 15000
+  },
+  "duplicate_titles": 21329,
+  "titles_with_conflicting_labels": 348,
+  "collapsed_classes": {
+    "BUSINESS": "Why iPhone 12 Will Be Another 'Defining Chapter' In Apple's Growth Story"
+  },
+  "title_tokens_p50": 12.0,
+  "title_tokens_p99": 21.0,
+  "mostly_non_ascii_titles": 0,
+  "warnings": [
+    "Collapsed classes (near-constant title): ['BUSINESS']. Model would learn a single string for these topics.",
+    "21329 duplicate titles: leakage risk across splits.",
+    "348 titles carry more than one label (label noise).",
+    "Minority class below 5% of rows (3.5%): monitor per-class metrics."
+  ]
+}

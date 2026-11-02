@@ -1,0 +1,48 @@
+{
+  "model_version": 2,
+  "source": "E4",
+  "rows": 105,
+  "inputs": {
+    "batch_oov_rate": 0.1331,
+    "rolling_breach_start_row": 102,
+    "non_english_titles": 5,
+    "alarms": [
+      "Rolling OOV rate (window=10) breached threshold from row 102",
+      "5 titles look non-English - check the source feed"
+    ],
+    "psi_n_tokens": 0.1869,
+    "psi_oov_rate": 0.2615
+  },
+  "outputs_current_model": {
+    "predicted_topic_share": {
+      "BUSINESS": 0.019,
+      "ENTERTAINMENT": 0.0571,
+      "HEALTH": 0.0,
+      "NATION": 0.1619,
+      "SCIENCE": 0.4095,
+      "SPORTS": 0.0571,
+      "TECHNOLOGY": 0.0381,
+      "WORLD": 0.2571
+    },
+    "mean_confidence": 0.8239,
+    "share_below_threshold": 0.5238
+  },
+  "outputs_logged_legacy": {
+    "predicted_topic_share": {
+      "ENTERTAINMENT": 0.0667,
+      "HEALTH": 0.0095,
+      "TECHNOLOGY": 0.0667,
+      "WORLD": 0.2571,
+      "BUSINESS": 0.0,
+      "SPORTS": 0.0762,
+      "NATION": 0.1619,
+      "SCIENCE": 0.3619
+    },
+    "mean_confidence": 0.8068,
+    "share_below_threshold": 0.5333
+  },
+  "agreement_logged_vs_current": 0.7143,
+  "flagged_domains": {
+    "corriere.it": 5
+  }
+}

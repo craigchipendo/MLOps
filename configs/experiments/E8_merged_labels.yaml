@@ -1,0 +1,26 @@
+# E8: label-ambiguity study. Merge the overlapping topics into 6 classes.
+# This changes the product's taxonomy, so it is NOT eligible for automatic
+# promotion. It produces evidence for the product-owner conversation.
+name: E8
+description: E4 setup with merged taxonomy (WORLD+NATION, SCIENCE+TECHNOLOGY) - stakeholder study
+promotable: false
+data:
+  label_map:
+    WORLD: WORLD_NATION
+    NATION: WORLD_NATION
+    SCIENCE: SCIENCE_TECHNOLOGY
+    TECHNOLOGY: SCIENCE_TECHNOLOGY
+features:
+  max_tokens: 20000
+  sequence_length: 24
+model:
+  architecture: pooled
+  embedding_dim: 64
+  dense_dim: 64
+  dropout: 0.4
+  spatial_dropout: 0.2
+training:
+  epochs: 20
+  batch_size: 64
+  early_stopping_patience: 3
+  class_weight: balanced

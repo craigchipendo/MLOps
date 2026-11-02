@@ -1,0 +1,20 @@
+# E7: 1D CNN over n-grams with stop-word removal in the vectorizer.
+name: E7
+description: 1D CNN, stop-word removal in TextVectorization, balanced class weights
+features:
+  max_tokens: 20000
+  sequence_length: 24
+  remove_stopwords: true
+model:
+  architecture: cnn
+  embedding_dim: 64
+  conv_filters: 128
+  kernel_size: 3
+  dense_dim: 64
+  dropout: 0.4
+  spatial_dropout: 0.2
+training:
+  epochs: 20
+  batch_size: 64
+  early_stopping_patience: 3
+  class_weight: balanced

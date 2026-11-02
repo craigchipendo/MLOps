@@ -1,0 +1,19 @@
+# E4: model-centric pass on the clean E3 data.
+# Pooled embedding classifier, larger vocabulary, dropout, class weights for the
+# under-represented SCIENCE topic, early stopping on dev loss.
+name: E4
+description: Pooled embedding model, 20k vocab, dropout, balanced class weights, early stopping
+features:
+  max_tokens: 20000
+  sequence_length: 24
+model:
+  architecture: pooled
+  embedding_dim: 64
+  dense_dim: 64
+  dropout: 0.4
+  spatial_dropout: 0.2
+training:
+  epochs: 20
+  batch_size: 64
+  early_stopping_patience: 3
+  class_weight: balanced

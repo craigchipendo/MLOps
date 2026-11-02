@@ -1,0 +1,20 @@
+# E5: E4 + EDA text augmentation (synonym replacement, random insertion, swap,
+# deletion) applied to SCIENCE titles in the TRAINING split only.
+name: E5
+description: E4 + EDA augmentation of SCIENCE titles (train split only)
+features:
+  max_tokens: 20000
+  sequence_length: 24
+model:
+  architecture: pooled
+  embedding_dim: 64
+  dense_dim: 64
+  dropout: 0.4
+  spatial_dropout: 0.2
+training:
+  epochs: 20
+  batch_size: 64
+  early_stopping_patience: 3
+  class_weight: balanced
+augmentation:
+  enabled: true

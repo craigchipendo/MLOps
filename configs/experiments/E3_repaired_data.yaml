@@ -1,0 +1,4 @@
+# E3: repair the corrupted BUSINESS titles and drop duplicate titles before splitting.
+# Model code is held fixed (data-centric iteration).
+name: E3
+description: Repaired BUSINESS titles + de-duplicated leak-free split, prototype architecture

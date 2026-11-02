@@ -1,0 +1,123 @@
+"""Model registry for TF Serving.
+
+`serving/registry.json` is the single source of truth for which experiment
+backs which served version and which version carries which label
+(`stable`, `canary`, `deprecated`). Both TF Serving config files are generated
+from it, so they can never disagree with each other:
+
+    serving/models/models.config         -> native `tensorflow_model_server`
+    serving/models/models.docker.config  -> `tensorflow/serving` container
+"""
+
+from __future__ import annotations
+
+import datetime as dt
+from pathlib import Path
+
+from newsclf.config import resolve
+from newsclf.utils import get_logger, read_json, write_json
+
+log = get_logger(__name__)
+LABELS = ("stable", "canary", "deprecated")
+
+
+class Registry:
+    def __init__(self, cfg: dict):
+        self.cfg = cfg
+        self.path = resolve(cfg["paths"]["serving_registry"])
+        self.model_name = cfg["deployment"]["model_name"]
+        self.root = resolve(cfg["paths"]["serving_root"])
+        self.model_dir = self.root / self.model_name
+        self.data = (
+            read_json(self.path)
+            if self.path.exists()
+            else {"model_name": self.model_name, "versions": {}, "labels": {}, "history": []}
+        )
+
+    # ------------------------------------------------------------------ io
+    def save(self) -> None:
+        write_json(self.data, self.path)
+        self.write_tf_serving_configs()
+
+    def version_dir(self, version: int) -> Path:
+        return self.model_dir / str(version)
+
+    def next_version(self) -> int:
+        return max(map(int, self.data["versions"]), default=0) + 1
+
+    # ------------------------------------------------------------ mutation
+    def register(self, version: int, info: dict) -> None:
+        info = {**info, "registered_at": dt.datetime.now().isoformat(timespec="seconds")}
+        self.data["versions"][str(version)] = info
+        self._event("register", version=version, source=info.get("source"))
+
+    def set_label(self, label: str, version: int) -> None:
+        if label not in LABELS:
+            raise ValueError(f"label must be one of {LABELS}")
+        if str(version) not in self.data["versions"]:
+            raise KeyError(f"version {version} is not registered")
+        for other, v in list(self.data["labels"].items()):
+            if v == version and other != label:
+                del self.data["labels"][other]
+        self.data["labels"][label] = version
+        self._event("label", label=label, version=version)
+
+    def promote(self, version: int) -> None:
+        """Make `version` stable; the previous stable becomes deprecated."""
+        previous = self.data["labels"].get("stable")
+        if previous == version:
+            return
+        if self.data["labels"].get("canary") == version:
+            del self.data["labels"]["canary"]
+        if previous is not None:
+            self.set_label("deprecated", previous)
+        self.set_label("stable", version)
+        log.info("Promoted version %s to stable (previous stable: %s)", version, previous)
+
+    def _event(self, action: str, **kw) -> None:
+        self.data["history"].append({"at": dt.datetime.now().isoformat(timespec="seconds"), "action": action, **kw})
+
+    # -------------------------------------------------------------- queries
+    def version_for(self, label: str | None = None, version: int | None = None) -> int:
+        if version is not None:
+            if str(version) not in self.data["versions"]:
+                raise KeyError(f"version {version} is not registered")
+            return int(version)
+        if label is not None:
+            if label not in self.data["labels"]:
+                raise KeyError(f"label '{label}' is not assigned")
+            return int(self.data["labels"][label])
+        if not self.data["versions"]:
+            raise KeyError("registry is empty; run `newsclf deploy` first")
+        return max(map(int, self.data["versions"]))
+
+    def info(self, version: int) -> dict:
+        return self.data["versions"][str(version)]
+
+    # ------------------------------------------------------- TF Serving cfg
+    def write_tf_serving_configs(self) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
+        native = self._render(self.model_dir.resolve().as_posix())
+        docker = self._render(f"/models/{self.model_name}")
+        (self.root / "models.config").write_text(native, encoding="utf-8")
+        (self.root / "models.docker.config").write_text(docker, encoding="utf-8")
+
+    def _render(self, base_path: str) -> str:
+        versions = sorted(map(int, self.data["versions"]))
+        version_lines = "\n".join(f"          versions: {v}" for v in versions)
+        label_blocks = "\n".join(
+            f"    version_labels {{\n      key: '{label}'\n      value: {v}\n    }}"
+            for label, v in sorted(self.data["labels"].items(), key=lambda kv: kv[1])
+        )
+        return (
+            "# GENERATED by `newsclf` from serving/registry.json - do not edit by hand.\n"
+            "model_config_list {\n  config {\n"
+            f"    name: '{self.model_name}'\n"
+            f"    base_path: '{base_path}'\n"
+            "    model_platform: 'tensorflow'\n"
+            "    model_version_policy {\n      specific {\n"
+            f"{version_lines}\n"
+            "      }\n    }\n"
+            f"{label_blocks}\n"
+            "  }\n}\n"
+        )

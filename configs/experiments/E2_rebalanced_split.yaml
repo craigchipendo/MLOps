@@ -1,0 +1,9 @@
+# E2: re-pool the legacy train/test files and re-split 60/20/20, stratified on topic.
+# Same model as the prototype. Data is NOT repaired yet, so the collapsed
+# BUSINESS titles are still in here. This run exists to show why E2's headline
+# accuracy cannot be trusted.
+name: E2
+description: Stratified 60/20/20 re-split of legacy data, prototype architecture, no data repair
+data:
+  repair_collapsed_titles: false
+  deduplicate: false

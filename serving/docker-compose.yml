@@ -1,0 +1,24 @@
+# TensorFlow Serving for the news topic classifier.
+#
+#   newsclf deploy                      # writes serving/models/ (versions + configs)
+#   docker compose -f serving/docker-compose.yml up -d
+#   newsclf canary-check --url http://localhost:8501
+#
+# Versions and labels (stable / canary / deprecated) come from the generated
+# models.docker.config; TF Serving re-reads it every 10 s, so `newsclf promote`
+# takes effect without restarting the container.
+services:
+  tf-serving:
+    image: tensorflow/serving:${TF_SERVING_TAG:-latest}   # pin a version for production, e.g. TF_SERVING_TAG=2.18.0
+    container_name: newsapp-tf-serving
+    ports:
+      - "8501:8501"   # REST
+      - "8500:8500"   # gRPC
+    volumes:
+      - ./models:/models:ro
+    command:
+      - --model_config_file=/models/models.docker.config
+      - --model_config_file_poll_wait_seconds=10
+      - --allow_version_labels_for_unavailable_models=true
+      - --rest_api_port=8501
+    restart: unless-stopped

@@ -1,0 +1,7 @@
+{
+  "experiment": "E4",
+  "selection_metric": "dev_macro_f1",
+  "dev_macro_f1": 0.7933247029807081,
+  "test_macro_f1": 0.7945863803152653,
+  "test_accuracy": 0.7950852160126833
+}
